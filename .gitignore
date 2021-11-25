@@ -1,3 +1,7 @@
+THE1/Outputs/
+THE1/THE1-Images
+THE1/.DS_Store
+.DS_Store
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
