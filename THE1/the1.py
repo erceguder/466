@@ -71,8 +71,8 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
     # print("h_c_gaussian:")
     # print(h_c_gaus)
 
-    T_1 = np.round(np.multiply((255./N), h_c_org))
-    T_2 = np.round(np.multiply((255./(2*N)), h_c_gaus))
+    T_1 = np.round(np.multiply((255./N), h_c_org)).astype(int)
+    T_2 = np.round(np.multiply((255./(2*N)), h_c_gaus)).astype(int)
 
     table = dict(enumerate(T_2))
     z_k = [0 for _ in range(256)]
@@ -92,6 +92,47 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
     plt.hist(intensities, bins=50)
     plt.savefig(out_dir + "/matched_image_histogram.png")
     
+def the1_convolution(input_img_path:str, filter: list):
+    """
+        1. Is the image grayscale?
+        2. is filter always 2D list?
+    """
+    # shape = (H, W, C)
+    img = cv2.imread(input_img_path, cv2.IMREAD_COLOR) # is it grayscale?
+
+    img_height = img.shape[0]
+    img_width = img.shape[1]
+
+    kernel_height = len(filter)
+    kernel_width = len(filter[0])
+
+    output = np.ndarray(shape=(img_height - kernel_height +1, img_width - kernel_width + 1, 3))
+
+    for row_idx in range(img_height - kernel_height +1):
+        row_patch = img[row_idx: row_idx+kernel_height]
+        
+        for col_idx in range(img_width - kernel_width + 1):
+
+            patch = row_patch[:, col_idx: col_idx+kernel_width]
+            
+            # print(patch.shape)
+            # print(patch[:, :, 0].shape)
+            # exit(0)
+
+
+            output[row_idx][col_idx][0] = np.sum(np.multiply(patch[:, :, 0], filter))
+            output[row_idx][col_idx][1] = np.sum(np.multiply(patch[:, :, 1], filter))
+            output[row_idx][col_idx][2] = np.sum(np.multiply(patch[:, :, 2], filter))
+
+    return output
+
 if __name__ == "__main__":
     ex = 1#input("Image: ")
-    part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [45, 200], [45, 45])
+    # part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [30], [20])
+
+    box_filter = [  [1, 1, 1], 
+                    [0, 0, 0],
+                    [-1, -1, -1]]
+
+    output = the1_convolution(f"THE1-Images/{ex}.png", box_filter)
+    cv2.imwrite("convolution.png", output)
