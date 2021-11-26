@@ -9,6 +9,15 @@ def normalize(intensities: np.ndarray):
 
     return g_s.astype(int)
 
+def find_closest(table: dict, s_k: int):
+    diff = 255
+    z_k = 0
+    for i in table:
+        if (abs(table[i] - s_k) < diff):
+            diff = abs(table[i] - s_k)
+            z_k = i
+    return z_k
+
 def part1(input_img_path: str, output_path: str, m: list, s: list):
     img = cv2.imread(input_img_path, cv2.IMREAD_GRAYSCALE)
     
@@ -45,34 +54,38 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
 
     gaussian = normalize(gaussian)
 
+    plt.hist(gaussian, bins=50)
+    plt.savefig(out_dir + "/gaussian_histogram.png")
+    plt.clf()
+
+    # Matching
+    # unique, counts = np.unique(gaussian, return_counts=True)
+    # print(dict(zip(unique, counts)))
+
     for intensity in gaussian:                                  # h of gaussians
         h_c_gaus[intensity] += 1
 
     for i in range(1, len(h_c_gaus)):                           # h_c of gaussians
         h_c_gaus[i] += h_c_gaus[i-1]
 
-    plt.hist(gaussian, bins=50)
-    plt.savefig(out_dir + "/gaussian_histogram.png")
-    plt.clf()
+    # print("h_c_gaussian:")
+    # print(h_c_gaus)
 
-    T_1 = np.multiply((255./N), h_c_org)
-    T_2 = np.multiply((255./N), h_c_gaus)
+    T_1 = np.round(np.multiply((255./N), h_c_org))
+    T_2 = np.round(np.multiply((255./(2*N)), h_c_gaus))
 
-    z_ks = [0 for _ in range(256)]
+    table = dict(enumerate(T_2))
+    z_k = [0 for _ in range(256)]
 
-    for r_k, T_1_out in enumerate(T_1):
-        for z_k, T_2_out in enumerate(T_2):
-            
-            if round(T_1_out) == round(T_2_out):
-                z_ks[r_k] = z_k
-                break
-    
+    for idx, s_k in enumerate(T_1):
+        z_k[idx] = find_closest(table, s_k)
+
     intensities.clear()
 
-    for row_idx,row in enumerate(img):
-        for col_idx, intensity in enumerate(row):
-            img[row_idx][col_idx] = z_ks[intensity]
-            intensities.append(z_ks[intensity])
+    for row in img:
+        for idx, intensity in enumerate(row):
+            row[idx] = z_k[intensity]
+            intensities.append(z_k[intensity])
 
     cv2.imwrite(out_dir + "/matched_image.png", img)
 
@@ -80,5 +93,5 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
     plt.savefig(out_dir + "/matched_image_histogram.png")
     
 if __name__ == "__main__":
-    ex = input()
-    part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [80, 160], [30, 30])
+    ex = 1#input("Image: ")
+    part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [45, 200], [45, 45])
