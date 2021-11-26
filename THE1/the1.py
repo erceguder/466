@@ -72,7 +72,7 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
     # print(h_c_gaus)
 
     T_1 = np.round(np.multiply((255./N), h_c_org)).astype(int)
-    T_2 = np.round(np.multiply((255./(2*N)), h_c_gaus)).astype(int)
+    T_2 = np.round(np.multiply((255./(len(m)*N)), h_c_gaus)).astype(int)
 
     table = dict(enumerate(T_2))
     z_k = [0 for _ in range(256)]
@@ -99,6 +99,8 @@ def the1_convolution(input_img_path:str, filter: list):
     """
     # shape = (H, W, C)
     img = cv2.imread(input_img_path, cv2.IMREAD_COLOR) # is it grayscale?
+
+    assert img is not None
 
     img_height = img.shape[0]
     img_width = img.shape[1]
@@ -128,11 +130,11 @@ def the1_convolution(input_img_path:str, filter: list):
 
 if __name__ == "__main__":
     ex = 1#input("Image: ")
-    # part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [30], [20])
+    part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [30], [20])
 
-    box_filter = [  [1, 1, 1], 
-                    [0, 0, 0],
-                    [-1, -1, -1]]
+    # box_filter = [  [1, 1, 1], 
+    #                 [0, 0, 0],
+    #                 [-1, -1, -1]]
 
-    output = the1_convolution(f"THE1-Images/{ex}.png", box_filter)
-    cv2.imwrite("convolution.png", output)
+    # output = the1_convolution(f"THE1-Images/{ex}.png", box_filter)
+    # cv2.imwrite("convolution.png", output)
