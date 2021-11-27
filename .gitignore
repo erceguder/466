@@ -2,6 +2,11 @@ THE1/Outputs/
 THE1/.DS_Store
 .DS_Store
 Untitled.ipynb
+edge_detector.ipynb
+reduce_noise.ipynb
+g.png
+g_h.png
+g_v.png
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
