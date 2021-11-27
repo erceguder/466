@@ -3,13 +3,28 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+def gaussians(m: list, s: list):
+    def gaussian(x, mu, sigma):
+        return np.exp( (((x - mu)/sigma)**2) / (-2) ) / (sigma * np.sqrt(2*np.pi))
+    
+    #return [[gaussian(x, mu, sigma) for x in np.arange(256)] for mu, sigma in zip(m, s)]
+    mixture = None
+
+    for mu, sigma in zip(m, s):
+        if mixture == None:
+            mixture = [gaussian(x, mu, sigma) for x in np.arange(256)]
+        else:
+            mixture = np.add(mixture, [gaussian(x, mu, sigma) for x in np.arange(256)])
+
+    return np.divide(mixture, np.sum(mixture))
+
 def normalize(intensities: np.ndarray):
-    g_m = np.subtract(intensities ,min(intensities))
+    g_m = np.subtract(intensities, min(intensities))
     g_s = np.round(np.multiply(np.divide(g_m, max(g_m)), 255))
 
     return g_s.astype(int)
 
-def find_closest(table: dict, s_k: int):
+def find_closest(table: dict, s_k):
     diff = 255
     z_k = 0
     for i in table:
@@ -32,8 +47,8 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
         pass
 
     intensities = list()
-    h_c_org = [0 for _ in range(256)]
-    h_c_gaus = [0 for _ in range(256)]
+    h_c_org = np.zeros(256)
+    h_c_gaus = np.zeros(256)
 
     for row in img:                                             # h of original image
         for intensity in row:
@@ -47,35 +62,28 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
     plt.savefig(out_dir + "/original_histogram.png")
     plt.clf()
 
-    gaussian = np.random.normal(loc=m[0], scale=s[0], size=N)   # Mixture gaussian distributions
-
-    for i in range(1, len(m)):
-        gaussian = np.append(gaussian, np.random.normal(loc=m[i], scale=s[i], size=N))
-
-    gaussian = normalize(gaussian)
-
-    plt.hist(gaussian, bins=50)
+    mixture = np.random.choice(256, N, True, gaussians(m, s))
+    plt.hist(mixture, bins=50)
     plt.savefig(out_dir + "/gaussian_histogram.png")
     plt.clf()
-
+    
     # Matching
     # unique, counts = np.unique(gaussian, return_counts=True)
     # print(dict(zip(unique, counts)))
 
-    for intensity in gaussian:                                  # h of gaussians
+    # gaussian = normalize(gaussian)
+
+    for intensity in mixture:                                   # h of mixture
         h_c_gaus[intensity] += 1
 
-    for i in range(1, len(h_c_gaus)):                           # h_c of gaussians
+    for i in range(1, len(h_c_gaus)):                           # h_c of mixture
         h_c_gaus[i] += h_c_gaus[i-1]
 
-    # print("h_c_gaussian:")
-    # print(h_c_gaus)
-
-    T_1 = np.round(np.multiply((255./N), h_c_org)).astype(int)
-    T_2 = np.round(np.multiply((255./(len(m)*N)), h_c_gaus)).astype(int)
+    T_1 = np.multiply((255./N), h_c_org)
+    T_2 = np.multiply((255./N), h_c_gaus)
 
     table = dict(enumerate(T_2))
-    z_k = [0 for _ in range(256)]
+    z_k = np.zeros(256)
 
     for idx, s_k in enumerate(T_1):
         z_k[idx] = find_closest(table, s_k)
@@ -130,7 +138,7 @@ def the1_convolution(input_img_path:str, filter: list):
 
 if __name__ == "__main__":
     ex = 1#input("Image: ")
-    part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [30], [20])
+    part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [45, 200], [45, 10])
 
     # box_filter = [  [1, 1, 1], 
     #                 [0, 0, 0],
