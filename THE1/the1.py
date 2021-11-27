@@ -135,9 +135,44 @@ def the1_convolution(input_img_path:str, filter: list):
 
     return output
 
+def normalize(image:np.ndarray):
+    g_m = np.subtract(image, image.min())
+    g_s = np.round(np.multiply(np.divide(g_m, g_m.max()), 255))
+
+    return g_s
+
+def part2(input_img_path:str , output_path:str):
+    """
+        Applies Sobel edge detector on a grayscale image of path
+        input_img_path and writes the edge map to output_path.
+    """
+
+    out_dir = parse(output_path)
+
+    try:
+        os.makedirs(out_dir)
+    except FileExistsError:
+        pass
+
+    # create vertical and horizontal masks
+    w_v = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+    w_h = [[1, 2, 1], [0, 0, 0], [-1, -2, -1]]
+
+    # get vertical and horizontal edge masks
+    g_v = the1_convolution(input_img_path=input_img_path, filter=w_v)
+    g_h = the1_convolution(input_img_path=input_img_path, filter=w_h)
+
+    # get approximate gradient at each point by combining both edge masks
+    g = np.sqrt(np.square(g_v) + np.square(g_h))
+    g = normalize(g)
+
+    cv2.imwrite(out_dir + "/edges.png", g)
+
+
 if __name__ == "__main__":
     ex = 1#input("Image: ")
-    part1(f"./THE1-Images/{ex}.png", "./Outputs/Part1/", [30, 230], [5, 5])
+    # part1(f"./THE1-Images/{ex}.png", "./Outputs/Part1/", [30, 230], [5, 5])
+    part2(f"./THE1-Images/{ex}.png", "./Outputs/Part2/")
 
     # box_filter = [  [1, 1, 1], 
     #                 [0, 0, 0],
