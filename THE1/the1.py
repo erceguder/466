@@ -128,6 +128,9 @@ def the1_convolution(input_img_path:str, filter: list):
 
     return output
 
+def part2(input_img_path , output_path):
+    pass
+
 if __name__ == "__main__":
     ex = 1#input("Image: ")
     part1(f"THE1-Images/{ex}.png", f"Outputs/{ex}/ex{ex}.png", [30], [20])
