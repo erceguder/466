@@ -1,3 +1,6 @@
+# Bugra Alparslan 2309607
+# Erce Guder 2310068
+
 import cv2
 import os
 import matplotlib.pyplot as plt
