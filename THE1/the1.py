@@ -99,16 +99,8 @@ def part1(input_img_path: str, output_path: str, m: list, s: list):
 
     plt.hist(intensities, bins=50)
     plt.savefig(out_dir + "matched_image_histogram.png")
-    
-def the1_convolution(input_img_path:str, filter: list):
-    """
-        1. Is the image grayscale?
-        2. is filter always 2D list?
-    """
-    # shape = (H, W, C)
-    img = cv2.imread(input_img_path) # is it grayscale?
 
-    assert img is not None
+def convolution(img, filter):
 
     img_height = img.shape[0]
     img_width = img.shape[1]
@@ -124,17 +116,24 @@ def the1_convolution(input_img_path:str, filter: list):
         for col_idx in range(img_width - kernel_width + 1):
 
             patch = row_patch[:, col_idx: col_idx+kernel_width]
-            
-            # print(patch.shape)
-            # print(patch[:, :, 0].shape)
-            # exit(0)
-
 
             output[row_idx][col_idx][0] = np.sum(np.multiply(patch[:, :, 0], filter))
             output[row_idx][col_idx][1] = np.sum(np.multiply(patch[:, :, 1], filter))
             output[row_idx][col_idx][2] = np.sum(np.multiply(patch[:, :, 2], filter))
 
     return output
+
+def the1_convolution(input_img_path:str, filter: list):
+    """
+        1. Is the image grayscale?
+        2. is filter always 2D list?
+    """
+    # shape = (H, W, C)
+    img = cv2.imread(input_img_path) # is it grayscale?
+    
+    assert img is not None
+
+    return convolution(img, filter)
 
 def normalize(image:np.ndarray):
     g_m = np.subtract(image, image.min())
@@ -168,29 +167,6 @@ def part2(input_img_path:str , output_path:str):
     g = normalize(g)
 
     cv2.imwrite(out_dir + "/edges.png", g)
-
-def convolution(img, filter):
-
-    img_height = img.shape[0]
-    img_width = img.shape[1]
-
-    kernel_height = len(filter)
-    kernel_width = len(filter[0])
-
-    output = np.ndarray(shape=(img_height - kernel_height +1, img_width - kernel_width + 1, 3))
-
-    for row_idx in range(img_height - kernel_height +1):
-        row_patch = img[row_idx: row_idx+kernel_height]
-        
-        for col_idx in range(img_width - kernel_width + 1):
-
-            patch = row_patch[:, col_idx: col_idx+kernel_width]
-
-            output[row_idx][col_idx][0] = np.sum(np.multiply(patch[:, :, 0], filter))
-            output[row_idx][col_idx][1] = np.sum(np.multiply(patch[:, :, 1], filter))
-            output[row_idx][col_idx][2] = np.sum(np.multiply(patch[:, :, 2], filter))
-
-    return output
 
 def median_filter(img, size):
     
@@ -232,19 +208,14 @@ def enhance_3(path_to_3:str , output_path:str):
         np.array([[0,0,1,2,1,0,0], [0,3,13,22,13,3,0], [1,13,59,97,59,13,1], [2,22,97,159,97,22,2], [1,13,59,97,59,13,1], [0,3,13,22,13,3,0], [0,0,1,2,1,0,0]]) * (1/1003)
     ]
 
-    laplacian_filter = np.array([[0,1,0],[1,-4,1],[0,1,0]])
-
     img = cv2.imread(path_to_3)
 
-    output = median_filter(img, 21)
-    cv2.imwrite(f"./{out_dir}/median21.png", output)
+    output = median_filter(img, 7)
+    output = convolution(output, gaussian_filters[0])
+    cv2.imwrite(f"./{out_dir}/enhance3.png", output)
 
-    # output = median_filter(img, 3)
-    # output = convolution(output, laplacian_filter)
-    # cv2.imwrite(f"./{out_dir}/median-laplace.png", output)
-
+    # below snippet produces every single combination of median and gaussian smoothing, for filter sizes of 3, 5 and 7.
     # l1 = l2 = [3,5,7]
-
     # for i in l1:
     #     output1 = median_filter(img, i)
     #     for j in l2:
@@ -257,6 +228,26 @@ def enhance_3(path_to_3:str , output_path:str):
     #         output2 = median_filter(output1, j)
     #         cv2.imwrite(f"./{out_dir}/gaussian{i}-median{j}.png", output2)
 
+def enhance_by_channel(img, out_dir):
+    
+    g = img[:,:,1]
+    g = cv2.cvtColor(g, cv2.COLOR_GRAY2BGR)
+    g = median_filter(g, 3)
+    img[1:-1,1:-1,1] = g[:,:,1]
+    # cv2.imwrite(f"./{out_dir}/g_channel_median3.png", img)
+
+    r = img[:,:,2]
+    r = cv2.cvtColor(r, cv2.COLOR_GRAY2BGR)
+    r = median_filter(r,3)
+    img[1:-1,1:-1,2] = r[:,:,2]
+    # cv2.imwrite(f"./{out_dir}/g+r_channel_median3.png", img)
+
+    b = img[:,:,0]
+    b = cv2.cvtColor(b, cv2.COLOR_GRAY2BGR)
+    b = convolution(b, np.array([[1,2,1],[2,4,2],[1,2,1]]) * (1/16))
+    img[1:-1,1:-1,0] = b[:,:,0]
+    cv2.imwrite(f"./{out_dir}/enhance4.png", img)
+
 def enhance_4(path_to_4:str , output_path:str):
     
     out_dir = parse(output_path)
@@ -265,80 +256,18 @@ def enhance_4(path_to_4:str , output_path:str):
         os.makedirs(out_dir)
     except FileExistsError:
         pass
-
-
+    
     img = cv2.imread(path_to_4)
-    laplacian_filter = np.array([[0,1,0],[1,-4,1],[0,1,0]])
-    log_filter = np.array([[0,0,3,2,2,2,3,0,0],[0,2,3,5,5,5,3,2,0],[3,3,5,3,0,3,5,3,3],[2,5,3,-12,-23,-12,3,5,2],[2,5,0,-23,-40,-23,0,5,2],[2,5,3,-12,-23,-12,3,5,2],[3,3,5,3,0,3,5,3,3],[0,2,3,5,5,5,3,2,0],[0,0,3,2,2,2,3,0,0]])
-
-    edge_mask = convolution(img, log_filter)
-    # edge_mask = normalize(edge_mask)
-    edge_mask[:,:,0] = normalize(edge_mask[:,:,0])
-    edge_mask[:,:,1] = normalize(edge_mask[:,:,1])
-    edge_mask[:,:,2] = normalize(edge_mask[:,:,2])
-
-    median_filtered = median_filter(img, 7)
-    smoothed = convolution(median_filtered, np.array([[1,2,1],[2,4,2],[1,2,1]]) * (1/16))
-    output = smoothed - edge_mask
-
-    output[:,:,0] = normalize(output[:,:,0])
-    output[:,:,1] = normalize(output[:,:,1])
-    output[:,:,2] = normalize(output[:,:,2])
-    cv2.imwrite(f"./{out_dir}/bugrik2.png", output)
-
-    # median_filtered = median_filter(img, 7)
-    # median_smoothed = convolution(median_filtered, np.array([[1,2,1],[2,4,2],[1,2,1]]) * (1/16))
-
-    # output = median_smoothed - edge_mask[3:-3, 3:-3, :]
-    # output[:,:,0] = normalize(output[:,:,0])
-    # output[:,:,1] = normalize(output[:,:,1])
-    # output[:,:,2] = normalize(output[:,:,2])
-
-    # cv2.imwrite(f"./{out_dir}/bugrik.png", output)
-
-    smoothing_filter = [
-                        [0.1, 0.1, 0.1],
-                        [0.1, 0.2, 0.1],
-                        [0.1, 0.1, 0.1]
-                    ]
-
-    # print("initial shape = {}".format(img.shape))
-    # median_filtered = median_filter(img, 3)
-    # print("median filtered shape={}".format(median_filtered.shape))
-    # median_smoothed = convolution(median_filtered, smoothing_filter)
-    # print("median smoothed shape={}".format(median_smoothed.shape))
-    # print(median_filtered[1:597, 1:591, :].shape)
-
-    # diff = median_filtered[1:597, 1:591, :] - median_smoothed
-    # output = median_filtered[1:597, 1:591, :] + diff
-    # output = normalize(output)
-    # output = np.multiply(output, 1.1)
-
-    # cv2.imwrite(f"./{out_dir}/ercuk2.png", output)
-
-
-
+    
+    # Applies median filter to R and G channels, smooths B channel
+    enhance_by_channel(img, out_dir)
     
 
 
 if __name__ == "__main__":
-    # ex = 2#input("Image: ")
-    # part1(f"./THE1-Images/{ex}.png", "./Outputs/Part1/", [30, 230], [5, 5])
-    # part2(f"./THE1-Images/{ex}.png", "./Outputs/Part2/")
-    # enhance_3("./THE1-Images/3.png", "~")
-
-    # box_filter = [  [1, 1, 1], 
-    #                 [0, 0, 0],
-    #                 [-1, -1, -1]]
-
-    # simple_smoothing_filters = [
-    #     np.array([[1,1,1],[1,1,1],[1,1,1]]) * (1/9),
-    #     np.array([[1,1,1],[1,2,1],[1,1,1]]) * (1/10),
-    #     np.array([[1,2,1],[1,4,1],[1,2,1]]) * (1/14)
-    # ]
 
     # enhance_3("./THE1-Images/3.png", "Outputs/Enhance3/")
-    enhance_4("./THE1-Images/4.png", "Outputs/Enhance4/")
+    # enhance_4("./THE1-Images/4.png", "Outputs/Enhance4/")
 
     
 
