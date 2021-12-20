@@ -94,6 +94,30 @@ def part1(input_img_path: str , output_path: str):
     cv2.imwrite(f'./{out_dir}/edges.png', img_back)
         
 
+
+def enhance_3(path_to_3: str, output_path: str):
+    
+    out_dir = parse(output_path)
+
+    try:
+        os.makedirs(out_dir)
+    except FileExistsError:
+        pass
+
+    img = cv2.imread(input_img_path, cv2.IMREAD_COLOR)
+
+
+
+def enhance_4(path_to_4: str, output_path: str):
+    
+    out_dir = parse(output_path)
+
+    try:
+        os.makedirs(out_dir)
+    except FileExistsError:
+        pass
+
+
 if __name__ == "__main__":
 
     part1('THE2-Images/1.png', 'Outputs/EgdeDetection/')
