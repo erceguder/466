@@ -20,13 +20,15 @@ def parse(path: str):
 
 
 def distance(point1: tuple, point2: tuple):
+    """
+        euclidian distance between two points
+    """
     return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
 
 
-def ideal_filter(img: np.ndarray, filter_type: str, r: float):
+def ideal_filter(img: np.ndarray, filter_type: str, radius: float):
     rows, cols = img.shape
     center = (rows//2, cols//2)
-    radius = r
         
     for r in range(rows):
         for c in range(cols):
@@ -42,8 +44,30 @@ def ideal_filter(img: np.ndarray, filter_type: str, r: float):
     return img
 
 
-def butterworth_filter(cutoff_freq: float):
-    pass
+def butterworth_high_pass(img_shape: tuple, D_0: int, n: int):
+    """
+        img_shape: shape of shifted frequency domain image
+        D_0: cutoff frequency
+        n: order
+    """
+
+    bwf = np.zeros(img_shape)
+
+    rows = img_shape[0]
+    cols = img_shape[1]
+
+    center = (rows//2, cols//2)
+
+    for u in range(rows):
+        for v in range(cols):
+            
+            if ((u,v) == center):    
+                bwf[u,v] = 0
+            else:
+                bwf[u,v] = 1/(1 + (D_0/distance(center, (u,v))) ** (2*n))
+
+
+    return bwf
 
 
 
@@ -59,12 +83,13 @@ def part1(input_img_path: str , output_path: str):
     img = cv2.imread(input_img_path, cv2.IMREAD_GRAYSCALE)
     freq = np.fft.fft2(img)
     freq_shifted = np.fft.fftshift(freq)
-    magnitude_spectrum = 20*np.log(np.abs(freq_shifted))
 
-    filtered = ideal_filter(freq_shifted, 'HIGH', 200)
-    filtered_inv_shift = np.fft.ifftshift(filtered)
-    img_back = np.real(np.fft.ifft2(filtered_inv_shift))
+    bw_filter = butterworth_high_pass(freq_shifted.shape, 125, 5)
 
+    filtered = np.multiply(bw_filter, freq_shifted)
+    freq_inv_shift = np.fft.ifftshift(filtered)
+    img_back = np.fft.ifft2(freq_inv_shift)
+    img_back = np.real(img_back)
 
     cv2.imwrite(f'./{out_dir}/edges.png', img_back)
         
@@ -72,6 +97,5 @@ def part1(input_img_path: str , output_path: str):
 if __name__ == "__main__":
 
     part1('THE2-Images/1.png', 'Outputs/EgdeDetection/')
-
 
 
