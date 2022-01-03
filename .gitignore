@@ -7,6 +7,7 @@ reduce_noise.ipynb
 THE1/THE1-Images/*
 THE2/THE2-Images/*
 THE2/Outputs/*
+THE1/__init__.py
 g.png
 g_h.png
 g_v.png
