@@ -106,7 +106,7 @@ def part1(input_img_path: str , output_path: str):
     img_back = np.fft.ifft2(freq_inv_shift)
     img_back = np.real(img_back)
 
-    cv2.imwrite(f'./{out_dir}/edges_cutoff{cutoff}_order{order}.png', img_back)
+    cv2.imwrite(f'./{out_dir}/edges.png', img_back)
 
 
 def enhance_3(path_to_3: str, output_path: str):
@@ -118,6 +118,32 @@ def enhance_3(path_to_3: str, output_path: str):
     except FileExistsError:
         pass
 
+    img = cv2.imread(path_to_3, cv2.IMREAD_COLOR)
+
+    gray_r = img[:, :, 2]
+    gray_g = img[:, :, 1]
+    gray_b = img[:, :, 0]
+
+    freq_r, freq_g, freq_b = np.fft.fft2(gray_r), np.fft.fft2(gray_g), np.fft.fft2(gray_b) 
+    fshift_r, fshift_g, fshift_b = np.fft.fftshift(freq_r), np.fft.fftshift(freq_g), np.fft.fftshift(freq_b)
+    magnitude_r, magnitude_g, magnitude_b = 1+np.log(np.abs(fshift_r)), 1+np.log(np.abs(fshift_g)), 1+np.log(np.abs(fshift_b))
+    magnitude_r, magnitude_g, magnitude_b = magnitude_r.astype(np.uint16), magnitude_g.astype(np.uint16), magnitude_b.astype(np.uint16)
+
+    magnitude_r = cv2.normalize(magnitude_r, dst=None, alpha=0, beta=65535, norm_type=cv2.NORM_MINMAX)
+    magnitude_g = cv2.normalize(magnitude_g, dst=None, alpha=0, beta=65535, norm_type=cv2.NORM_MINMAX)
+    magnitude_b = cv2.normalize(magnitude_b, dst=None, alpha=0, beta=65535, norm_type=cv2.NORM_MINMAX)
+
+    cv2.imshow('r', magnitude_b)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    # plt.subplot(131),plt.imshow(magnitude_r, cmap = 'gray')
+    # plt.title('Magnitude R'), plt.xticks([]), plt.yticks([])
+    # plt.subplot(132),plt.imshow(magnitude_g, cmap = 'gray')
+    # plt.title('Magnitude G'), plt.xticks([]), plt.yticks([])
+    # plt.subplot(133),plt.imshow(magnitude_b, cmap = 'gray')
+    # plt.title('Magnitude B'), plt.xticks([]), plt.yticks([])
+    # plt.show()
 
 
 
