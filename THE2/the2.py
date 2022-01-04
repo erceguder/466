@@ -182,6 +182,40 @@ def enhance_4(path_to_4: str, output_path: str):
     except FileExistsError:
         pass
 
+    img = cv2.imread(path_to_4, cv2.IMREAD_COLOR)
+
+    gray_r = img[:, :, 2]
+    gray_g = img[:, :, 1]
+    gray_b = img[:, :, 0]
+
+    freq_r, freq_g, freq_b = np.fft.fft2(gray_r), np.fft.fft2(gray_g), np.fft.fft2(gray_b)
+    fshift_r, fshift_g, fshift_b = np.fft.fftshift(freq_r), np.fft.fftshift(freq_g), np.fft.fftshift(freq_b)
+
+    radius_r, radius_g, radius_b = 50, 50, 50
+
+    filtered_r = np.multiply(np.subtract(1, gaussian_high_pass(fshift_r.shape, radius_r)), fshift_r)
+    filtered_g = np.multiply(np.subtract(1, gaussian_high_pass(fshift_g.shape, radius_g)), fshift_g)
+    filtered_b = np.multiply(np.subtract(1, gaussian_high_pass(fshift_b.shape, radius_b)), fshift_b)
+
+    freq_inv_shift_r, freq_inv_shift_g, freq_inv_shift_b = np.fft.ifftshift(filtered_r), np.fft.ifftshift(
+        filtered_g), np.fft.ifftshift(filtered_b)
+
+    img_back_r = np.real(np.fft.ifft2(freq_inv_shift_r))
+    img_back_g = np.real(np.fft.ifft2(freq_inv_shift_g))
+    img_back_b = np.real(np.fft.ifft2(freq_inv_shift_b))
+
+    img_back_r, img_back_g, img_back_b = img_back_r.astype(np.uint8), img_back_g.astype(np.uint8), img_back_b.astype(
+        np.uint8)
+    img_back_r = cv2.normalize(img_back_r, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    img_back_g = cv2.normalize(img_back_g, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    img_back_b = cv2.normalize(img_back_b, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+
+    back_rgb = np.dstack((img_back_b, img_back_g, img_back_r))
+
+    cv2.imwrite(f'./{out_dir}/enhanced4.png', back_rgb)
+
+
+
 def dct(img):
     return fftpack.dct(fftpack.dct(img, axis=0, norm="ortho"), axis=1, norm="ortho")
 
@@ -420,6 +454,8 @@ def the2_read(input_img_path: str):
 if __name__ == "__main__":
 
     # part1('THE2-Images/1.png', 'Outputs/EgdeDetection/')
-    enhance_3('THE2-Images/3.png', 'Outputs/Enhance3/')
+    # enhance_3('THE2-Images/3.png', 'Outputs/Enhance3/')
+    enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
+
 
     # the2_read(the2_write("THE2-Images/5.png", "outputs/"))
