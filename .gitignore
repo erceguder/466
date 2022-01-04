@@ -11,6 +11,7 @@ THE1/__init__.py
 g.png
 g_h.png
 g_v.png
+THE2/.idea/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
