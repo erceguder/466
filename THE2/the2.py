@@ -9,14 +9,14 @@ from math import exp, sqrt, e
 import scipy.fftpack as fftpack
 import json
 
-lum_quant_table =  [[16, 11, 10, 16, 24, 40, 51, 61],
-                    [12, 12, 14, 19, 26, 58, 60, 55],
-                    [14, 13, 16, 24, 40, 57, 69, 56],
-                    [14, 17, 22, 29, 51, 87, 80, 62],
-                    [18, 22, 37, 56, 68, 109, 103, 77],
-                    [24, 35, 55, 64, 81, 104, 113, 92],
-                    [49, 64, 78, 87, 103, 121, 120, 101],
-                    [72, 92, 95, 98, 112, 100, 103, 99]]
+lum_quant_table = [[16, 11, 10, 16, 24, 40, 51, 61],
+                   [12, 12, 14, 19, 26, 58, 60, 55],
+                   [14, 13, 16, 24, 40, 57, 69, 56],
+                   [14, 17, 22, 29, 51, 87, 80, 62],
+                   [18, 22, 37, 56, 68, 109, 103, 77],
+                   [24, 35, 55, 64, 81, 104, 113, 92],
+                   [49, 64, 78, 87, 103, 121, 120, 101],
+                   [72, 92, 95, 98, 112, 100, 103, 99]]
 
 chrom_quant_table = [[17, 18, 24, 47, 99, 99, 99, 99],
                      [18, 21, 26, 66, 99, 99, 99, 99],
@@ -45,23 +45,23 @@ def distance(point1: tuple, point2: tuple):
     """
         euclidian distance between two points
     """
-    return sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
+    return sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
 
 
 def ideal_filter(img: np.ndarray, filter_type: str, radius: float):
     rows, cols = img.shape
-    center = (rows//2, cols//2)
-        
+    center = (rows // 2, cols // 2)
+
     for r in range(rows):
         for c in range(cols):
 
             if filter_type == 'HIGH':
-                if (distance((r,c), center)) < radius:
-                    img[r,c] = 0
+                if (distance((r, c), center)) < radius:
+                    img[r, c] = 0
 
             elif filter_type == 'LOW':
-                if (distance((r,c), center)) > radius:
-                    img[r,c] = 0
+                if (distance((r, c), center)) > radius:
+                    img[r, c] = 0
 
     return img
 
@@ -78,15 +78,15 @@ def butterworth_high_pass(img_shape: tuple, D_0: int, n: int):
     rows = img_shape[0]
     cols = img_shape[1]
 
-    center = (rows//2, cols//2)
+    center = (rows // 2, cols // 2)
 
     for u in range(rows):
         for v in range(cols):
-            
+
             if (u, v) == center:
-                bwf[u,v] = 0
+                bwf[u, v] = 0
             else:
-                bwf[u,v] = 1/(1 + (D_0/distance(center, (u,v))) ** (2*n))
+                bwf[u, v] = 1 / (1 + (D_0 / distance(center, (u, v))) ** (2 * n))
 
     return bwf
 
@@ -101,14 +101,12 @@ def gaussian_high_pass(img_shape: tuple, D_0: float):
 
     for u in range(rows):
         for v in range(cols):
-
-            gaussian[u,v] = 1 - exp(-distance((u,v), center)**2/(2*D_0*D_0))
+            gaussian[u, v] = 1 - exp(-distance((u, v), center) ** 2 / (2 * D_0 * D_0))
 
     return gaussian
 
 
-def part1(input_img_path: str , output_path: str):
-    
+def part1(input_img_path: str, output_path: str):
     out_dir = parse(output_path)
 
     try:
@@ -133,7 +131,6 @@ def part1(input_img_path: str , output_path: str):
 
 
 def enhance_3(path_to_3: str, output_path: str):
-    
     out_dir = parse(output_path)
 
     try:
@@ -147,7 +144,7 @@ def enhance_3(path_to_3: str, output_path: str):
     gray_g = img[:, :, 1]
     gray_b = img[:, :, 0]
 
-    freq_r, freq_g, freq_b = np.fft.fft2(gray_r), np.fft.fft2(gray_g), np.fft.fft2(gray_b) 
+    freq_r, freq_g, freq_b = np.fft.fft2(gray_r), np.fft.fft2(gray_g), np.fft.fft2(gray_b)
     fshift_r, fshift_g, fshift_b = np.fft.fftshift(freq_r), np.fft.fftshift(freq_g), np.fft.fftshift(freq_b)
 
     radius_r, radius_g, radius_b = 100, 50, 100
@@ -156,13 +153,15 @@ def enhance_3(path_to_3: str, output_path: str):
     filtered_g = np.multiply(np.subtract(1, gaussian_high_pass(fshift_g.shape, radius_g)), fshift_g)
     filtered_b = np.multiply(np.subtract(1, gaussian_high_pass(fshift_b.shape, radius_b)), fshift_b)
 
-    freq_inv_shift_r, freq_inv_shift_g, freq_inv_shift_b = np.fft.ifftshift(filtered_r), np.fft.ifftshift(filtered_g), np.fft.ifftshift(filtered_b)
+    freq_inv_shift_r, freq_inv_shift_g, freq_inv_shift_b = np.fft.ifftshift(filtered_r), np.fft.ifftshift(
+        filtered_g), np.fft.ifftshift(filtered_b)
 
     img_back_r = np.real(np.fft.ifft2(freq_inv_shift_r))
     img_back_g = np.real(np.fft.ifft2(freq_inv_shift_g))
     img_back_b = np.real(np.fft.ifft2(freq_inv_shift_b))
 
-    img_back_r, img_back_g, img_back_b = img_back_r.astype(np.uint8), img_back_g.astype(np.uint8), img_back_b.astype(np.uint8)
+    img_back_r, img_back_g, img_back_b = img_back_r.astype(np.uint8), img_back_g.astype(np.uint8), img_back_b.astype(
+        np.uint8)
     img_back_r = cv2.normalize(img_back_r, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
     img_back_g = cv2.normalize(img_back_g, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
     img_back_b = cv2.normalize(img_back_b, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
@@ -172,9 +171,7 @@ def enhance_3(path_to_3: str, output_path: str):
     cv2.imwrite(f'./{out_dir}/enhanced3.png', back_rgb)
 
 
-
 def enhance_4(path_to_4: str, output_path: str):
-    
     out_dir = parse(output_path)
 
     try:
@@ -215,12 +212,13 @@ def enhance_4(path_to_4: str, output_path: str):
     cv2.imwrite(f'./{out_dir}/enhanced4.png', back_rgb)
 
 
-
 def dct(img):
     return fftpack.dct(fftpack.dct(img, axis=0, norm="ortho"), axis=1, norm="ortho")
 
+
 def idct(img):
     return fftpack.idct(fftpack.idct(img, axis=0, norm="ortho"), axis=1, norm="ortho")
+
 
 def huffman_encode(patch: np.ndarray):
     class Node:
@@ -232,7 +230,7 @@ def huffman_encode(patch: np.ndarray):
             self.code = ''
 
     def code_tree(codes: dict, tree: Node, code: str):
-        if tree.left is not None:   # right is also not None
+        if tree.left is not None:  # right is also not None
             tree.left.code = code + '0'
             code_tree(codes, tree.left, tree.left.code)
 
@@ -267,23 +265,25 @@ def huffman_encode(patch: np.ndarray):
 
     return codes
 
+
 def huffman_decode(string, dic):
     start, end = 0, 1
     result = list()
 
     while start != (len(string)):
-            substr = string[start: end]
-            found = False
+        substr = string[start: end]
+        found = False
 
-            for key in dic:
-                    if dic[key] == substr:
-                            found = True
-                            start = end
-                            result.append(int(key))
-            if not found:
-                    end += 1
+        for key in dic:
+            if dic[key] == substr:
+                found = True
+                start = end
+                result.append(int(key))
+        if not found:
+            end += 1
 
     return result
+
 
 def zigzag(patch: np.ndarray):
     global zigzag_indices
@@ -293,9 +293,9 @@ def zigzag(patch: np.ndarray):
         for i in range(1, 16):
             for j in range(i):
                 if i % 2 == 1:
-                    zigzag_indices.append((i-1-j, j))
+                    zigzag_indices.append((i - 1 - j, j))
                 else:
-                    zigzag_indices.append((j, i-1-j))
+                    zigzag_indices.append((j, i - 1 - j))
 
         zigzag_indices = list(filter(lambda x: x[0] < 8 and x[1] < 8, zigzag_indices))
 
@@ -306,6 +306,7 @@ def zigzag(patch: np.ndarray):
 
     return result
 
+
 def reverse_zigzag(vals):
     global zigzag_indices
 
@@ -314,9 +315,9 @@ def reverse_zigzag(vals):
         for i in range(1, 16):
             for j in range(i):
                 if i % 2 == 1:
-                    zigzag_indices.append((i-1-j, j))
+                    zigzag_indices.append((i - 1 - j, j))
                 else:
-                    zigzag_indices.append((j, i-1-j))
+                    zigzag_indices.append((j, i - 1 - j))
 
         zigzag_indices = list(filter(lambda x: x[0] < 8 and x[1] < 8, zigzag_indices))
 
@@ -327,17 +328,17 @@ def reverse_zigzag(vals):
 
     return result
 
-def run_len_encode(string):
 
+def run_len_encode(string):
     element = string[0]
-    result = str()#list()
+    result = str()  # list()
     repeat = 1
 
     for char in string[1:]:
         if char == element:
             repeat += 1
         else:
-            #result.append((int(element), repeat))
+            # result.append((int(element), repeat))
             result += element + str(repeat) + "-"
             repeat = 1
             element = char
@@ -346,6 +347,7 @@ def run_len_encode(string):
     result += element + str(repeat)
 
     return result
+
 
 def run_len_decode(string):
     # 01-14-05-12-01-13-03-158
@@ -356,6 +358,7 @@ def run_len_decode(string):
         decoded += int(symbol[1:]) * symbol[0]
 
     return decoded
+
 
 def the2_write(input_img_path: str, output_path: str):
     out_dir = parse(output_path)
@@ -384,13 +387,17 @@ def the2_write(input_img_path: str, output_path: str):
     for channel in range(3):
         for i in range(shape[0] // 8):  # Assuming the spatial resolution is multiple of 8.
             for j in range(shape[1] // 8):
-                patch = transformed[8*i: 8*(i+1), 8*j:8*(j+1), channel] = dct(ycbcr_img[8*i: 8*(i+1), 8*j:8*(j+1), channel])
+                patch = transformed[8 * i: 8 * (i + 1), 8 * j:8 * (j + 1), channel] = dct(
+                    ycbcr_img[8 * i: 8 * (i + 1), 8 * j:8 * (j + 1), channel])
 
-                if channel != 0:    # chroma channel
-                    transformed[8*i: 8*(i+1), 8*j:8*(j+1), channel] = np.divide(patch, chrom_quant_table).astype(int)
+                if channel != 0:  # chroma channel
+                    transformed[8 * i: 8 * (i + 1), 8 * j:8 * (j + 1), channel] = np.divide(patch,
+                                                                                            chrom_quant_table).astype(
+                        int)
 
-                else:               # lum channel
-                    transformed[8*i: 8*(i+1), 8*j:8*(j+1), channel] = np.divide(patch, lum_quant_table).astype(int)
+                else:  # lum channel
+                    transformed[8 * i: 8 * (i + 1), 8 * j:8 * (j + 1), channel] = np.divide(patch,
+                                                                                            lum_quant_table).astype(int)
 
     transformed = transformed.astype(int)
 
@@ -406,7 +413,7 @@ def the2_write(input_img_path: str, output_path: str):
 
             for j in range(shape[1] // 8):
 
-                patch = transformed[8*i: 8*(i+1), 8*j:8*(j+1), channel]
+                patch = transformed[8 * i: 8 * (i + 1), 8 * j:8 * (j + 1), channel]
                 ordered = zigzag(patch)
 
                 huff_encoded = str()
@@ -419,6 +426,7 @@ def the2_write(input_img_path: str, output_path: str):
     f.close()
 
     return img_name
+
 
 def the2_read(input_img_path: str):
     f = open(input_img_path, "r")
@@ -441,21 +449,22 @@ def the2_read(input_img_path: str):
                 # reconstructed_img[8*i:8*(i+1), 8*j:8*(j+1), channel] = reverse_zigzag(huff_decoded)
 
                 if channel != 0:
-                    reconstructed_img[8*i:8*(i+1), 8*j:8*(j+1), channel] = idct(np.multiply(reverse_zigzag(huff_decoded), chrom_quant_table))
+                    reconstructed_img[8 * i:8 * (i + 1), 8 * j:8 * (j + 1), channel] = idct(
+                        np.multiply(reverse_zigzag(huff_decoded), chrom_quant_table))
                 else:
-                    reconstructed_img[8*i:8*(i+1), 8*j:8*(j+1), channel] = idct(np.multiply(reverse_zigzag(huff_decoded), lum_quant_table))
+                    reconstructed_img[8 * i:8 * (i + 1), 8 * j:8 * (j + 1), channel] = idct(
+                        np.multiply(reverse_zigzag(huff_decoded), lum_quant_table))
 
     plt.figure()
-    plt.imshow(cv2.cvtColor(np.float32(reconstructed_img/255.), cv2.COLOR_YCrCb2RGB))
+    plt.imshow(cv2.cvtColor(np.float32(reconstructed_img / 255.), cv2.COLOR_YCrCb2RGB))
     plt.show()
 
     f.close()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     # part1('THE2-Images/1.png', 'Outputs/EgdeDetection/')
     # enhance_3('THE2-Images/3.png', 'Outputs/Enhance3/')
     enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
-
 
     # the2_read(the2_write("THE2-Images/5.png", "outputs/"))
