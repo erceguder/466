@@ -420,11 +420,12 @@ def the2_write(input_img_path: str, output_path: str):
                 for element in ordered:
                     huff_encoded += huff_codes[element]
 
-                out[channel][i][j] = run_len_encode(huff_encoded)
+                # '1' added to avoid cases like '00111...' being trimmed down to '111...'
+                out[channel][i][j] = int('1' + huff_encoded, 2)
+                # out[channel][i][j] = run_len_encode(huff_encoded)
 
     json.dump(out, f, separators=(',', ':'))
     f.close()
-
     return img_name
 
 
@@ -444,9 +445,14 @@ def the2_read(input_img_path: str):
 
         for i in range(shape[0] // 8):
             for j in range(shape[1] // 8):
-                run_len_decoded = run_len_decode(img[str(channel)][str(i)][str(j)])
-                huff_decoded = huffman_decode(run_len_decoded, huff_codes)
-                # reconstructed_img[8*i:8*(i+1), 8*j:8*(j+1), channel] = reverse_zigzag(huff_decoded)
+                # run_len_decoded = run_len_decode(img[str(channel)][str(i)][str(j)])
+                # huff_decoded = huffman_decode(run_len_decoded, huff_codes)
+                
+                encoded = img[str(channel)][str(i)][str(j)]
+                encoded = format(encoded, 'b')
+                encoded = encoded[1:]   # drop the '1' added
+
+                huff_decoded = huffman_decode(encoded, huff_codes)
 
                 if channel != 0:
                     reconstructed_img[8 * i:8 * (i + 1), 8 * j:8 * (j + 1), channel] = idct(
@@ -461,10 +467,9 @@ def the2_read(input_img_path: str):
 
     f.close()
 
-
 if __name__ == "__main__":
     # part1('THE2-Images/1.png', 'Outputs/EgdeDetection/')
     # enhance_3('THE2-Images/3.png', 'Outputs/Enhance3/')
-    enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
+    # enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
 
-    # the2_read(the2_write("THE2-Images/5.png", "outputs/"))
+    the2_read(the2_write("THE2-Images/5.png", "outputs/"))
