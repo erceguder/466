@@ -190,7 +190,7 @@ def enhance_4(path_to_4: str, output_path: str):
     freq_r, freq_g, freq_b = np.fft.fft2(gray_r), np.fft.fft2(gray_g), np.fft.fft2(gray_b)
     fshift_r, fshift_g, fshift_b = np.fft.fftshift(freq_r), np.fft.fftshift(freq_g), np.fft.fftshift(freq_b)
 
-    radius_r, radius_g, radius_b = 50, 50, 50
+    radius_r, radius_g, radius_b = 40, 40, 40
 
     filtered_r = np.multiply(np.subtract(1, gaussian_high_pass(fshift_r.shape, radius_r)), fshift_r)
     filtered_g = np.multiply(np.subtract(1, gaussian_high_pass(fshift_g.shape, radius_g)), fshift_g)
