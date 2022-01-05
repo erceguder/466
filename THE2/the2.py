@@ -48,22 +48,24 @@ def distance(point1: tuple, point2: tuple):
     return sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
 
 
-def ideal_filter(img: np.ndarray, filter_type: str, radius: float):
-    rows, cols = img.shape
+def ideal_filter(img_shape: tuple, filter_type: str, radius: float):
+    rows, cols = img_shape
     center = (rows // 2, cols // 2)
+
+    ideal_f = np.ones(img_shape)
 
     for r in range(rows):
         for c in range(cols):
 
             if filter_type == 'HIGH':
                 if (distance((r, c), center)) < radius:
-                    img[r, c] = 0
+                    ideal_f[r, c] = 0
 
             elif filter_type == 'LOW':
                 if (distance((r, c), center)) > radius:
-                    img[r, c] = 0
+                    ideal_f[r, c] = 0
 
-    return img
+    return ideal_f
 
 
 def butterworth_high_pass(img_shape: tuple, D_0: int, n: int):
@@ -149,9 +151,9 @@ def enhance_3(path_to_3: str, output_path: str):
 
     radius_r, radius_g, radius_b = 100, 50, 100
 
-    filtered_r = np.multiply(np.subtract(1, gaussian_high_pass(fshift_r.shape, radius_r)), fshift_r)
-    filtered_g = np.multiply(np.subtract(1, gaussian_high_pass(fshift_g.shape, radius_g)), fshift_g)
-    filtered_b = np.multiply(np.subtract(1, gaussian_high_pass(fshift_b.shape, radius_b)), fshift_b)
+    filtered_r = np.multiply(np.subtract(1, butterworth_high_pass(fshift_r.shape, radius_r, 2)), fshift_r)
+    filtered_g = np.multiply(np.subtract(1, butterworth_high_pass(fshift_g.shape, radius_g, 2)), fshift_g)
+    filtered_b = np.multiply(np.subtract(1, butterworth_high_pass(fshift_b.shape, radius_b, 2)), fshift_b)
 
     freq_inv_shift_r, freq_inv_shift_g, freq_inv_shift_b = np.fft.ifftshift(filtered_r), np.fft.ifftshift(
         filtered_g), np.fft.ifftshift(filtered_b)
@@ -470,6 +472,6 @@ def the2_read(input_img_path: str):
 if __name__ == "__main__":
     # part1('THE2-Images/1.png', 'Outputs/EgdeDetection/')
     # enhance_3('THE2-Images/3.png', 'Outputs/Enhance3/')
-    # enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
+    enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
 
-    the2_read(the2_write("THE2-Images/5.png", "outputs/"))
+    # the2_read(the2_write("THE2-Images/5.png", "outputs/"))
