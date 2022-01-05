@@ -374,6 +374,7 @@ def the2_write(input_img_path: str, output_path: str):
 
     f = open(img_name, "w")
 
+    input_size = os.path.getsize(input_img_path)
     bgr_img = cv2.imread(input_img_path)
     ycbcr_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2YCrCb)
     shape = ycbcr_img.shape
@@ -428,6 +429,10 @@ def the2_write(input_img_path: str, output_path: str):
 
     json.dump(out, f, separators=(',', ':'))
     f.close()
+
+    output_size = os.path.getsize(img_name)
+    print(f"Compression ratios is {output_size / input_size}")
+
     return img_name
 
 
@@ -472,6 +477,6 @@ def the2_read(input_img_path: str):
 if __name__ == "__main__":
     # part1('THE2-Images/1.png', 'Outputs/EgdeDetection/')
     # enhance_3('THE2-Images/3.png', 'Outputs/Enhance3/')
-    enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
+    # enhance_4('THE2-Images/4.png', 'Outputs/Enhance4/')
 
-    # the2_read(the2_write("THE2-Images/5.png", "outputs/"))
+    the2_read(the2_write("THE2-Images/5.png", "outputs/"))
