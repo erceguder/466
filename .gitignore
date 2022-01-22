@@ -12,6 +12,8 @@ g.png
 g_h.png
 g_v.png
 THE2/.idea/
+THE3/THE3-Images/*.png
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
