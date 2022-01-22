@@ -431,7 +431,7 @@ def the2_write(input_img_path: str, output_path: str):
     f.close()
 
     output_size = os.path.getsize(img_name)
-    print(f"Compression ratios is {output_size / input_size}")
+    print(f"Compression ratios is {input_size / output_size}")
 
     return img_name
 
