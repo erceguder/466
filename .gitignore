@@ -17,6 +17,7 @@ THE1/.THE1.pdf.icloud
 THE2/.466_THE2.pdf.icloud
 THE2/.THE2.pdf.icloud
 THE3/*.pickle
+THE3/Outputs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
