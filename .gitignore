@@ -13,6 +13,10 @@ g_h.png
 g_v.png
 THE2/.idea/
 THE3/THE3-Images/*.png
+THE1/.THE1.pdf.icloud
+THE2/.466_THE2.pdf.icloud
+THE2/.THE2.pdf.icloud
+THE3/*.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
